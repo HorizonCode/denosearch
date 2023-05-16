@@ -24,14 +24,14 @@ console.log(health);
 ### List indexes
 
 ```typescript
-const indexes = await client.listIndexes();
+const indexes = await client.indexes();
 console.log(indexes);
 ```
 
 ### Get an index
 
 ```typescript
-const index = await client.getIndex("movies");
+const index = await client.index("movies");
 console.log(index);
 ```
 

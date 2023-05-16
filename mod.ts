@@ -78,7 +78,7 @@ export class Client {
 
   async task(taskId: number): Promise<Task> {
     const taskFetch = await this.raw(
-      `/tasks${taskId}`,
+      `/tasks/${taskId}`,
     );
     return await taskFetch.json();
   }
