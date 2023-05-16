@@ -141,7 +141,6 @@ export class IndexResponse {
     const objectArray = Array.isArray(objectOrArray)
       ? objectOrArray
       : [objectOrArray];
-    console.log(objectArray);
     const addOrReplaceFetch = await this.#clientInstance.raw(
       `/indexes/${this.uid}/documents${
         primaryKey ? `?primaryKey=${primaryKey}` : ""
@@ -223,7 +222,6 @@ export class Tasks {
       const taskUid = `${task.uid}`;
       return acc ? `${acc},${taskUid}` : taskUid;
     }, "");
-    console.log(tasksToCancel);
     const cancelResult = await this.#clientInstance.raw(
       `/tasks/cancel?uids=${tasksToCancel}`,
       "POST",
@@ -236,7 +234,6 @@ export class Tasks {
       const taskUid = `${task.uid}`;
       return acc ? `${acc},${taskUid}` : taskUid;
     }, "");
-    console.log(tasksToDelete);
     const cancelResult = await this.#clientInstance.raw(
       `/tasks?uids=${tasksToDelete}`,
       "DELETE",
