@@ -136,3 +136,24 @@ export type TasksResult = {
   from: number;
   next: number | null;
 };
+
+export type TypoTolerance = {
+  enabled: boolean;
+  minWordSizeForTypos: { oneTypo: number; twoTypos: number };
+  disableOnWords: string[];
+  disableOnAttributes: string[];
+};
+
+export type SettingsResponse = {
+  displayedAttributes: string[];
+  searchableAttributes: string[];
+  filterableAttributes: string[];
+  sortableAttributes: string[];
+  rankingRules: string[];
+  stopWords: string[];
+  synonyms: { [key: string]: unknown };
+  distinctAttribute: string;
+  typoTolerance: TypoTolerance;
+  faceting: { maxValuesPerFacet: number };
+  pagination: { maxTotalHits: number };
+};

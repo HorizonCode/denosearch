@@ -8,6 +8,7 @@ import {
   IndexStats,
   SearchOptions,
   SearchResult,
+  SettingsResponse,
   Task,
   TaskOptions,
   TaskResponse,
@@ -61,6 +62,32 @@ export class Client {
     return new IndexResponse(this, indexJson);
   }
 
+  async create(indexName: string, primaryKey?: string): Promise<TaskResponse> {
+    const indexCreateFetch = await this.raw(
+      `/indexes?uid=${indexName}${
+        primaryKey ? `&primaryKey=${primaryKey}` : ""
+      }`,
+      "POST",
+    );
+    return await indexCreateFetch.json();
+  }
+
+  async update(indexName: string, primaryKey: string | null) {
+    const indexUpdateFetch = await this.raw(
+      `/indexes?uid=${indexName}&primaryKey=${primaryKey}`,
+      "PATCH",
+    );
+    return await indexUpdateFetch.json();
+  }
+
+  async delete(indexName: string): Promise<TaskResponse> {
+    const indexDeleteFetch = await this.raw(
+      `/indexes/${indexName}`,
+      "DELETE",
+    );
+    return await indexDeleteFetch.json();
+  }
+
   async tasks(options?: TaskOptions): Promise<Tasks> {
     let queryParams;
     if (options) {
@@ -103,6 +130,13 @@ export class IndexResponse {
       `/indexes/${this.uid}/stats`,
     );
     return await statsFetch.json();
+  }
+
+  async settingsGet(): Promise<SettingsResponse> {
+    const settingsFetch = await this.#clientInstance.raw(
+      `/indexes/${this.uid}/settings`,
+    );
+    return await settingsFetch.json();
   }
 
   async documents(
