@@ -1,3 +1,22 @@
+export type TaskStatus =
+  | "enqueued"
+  | "processing"
+  | "succeeded"
+  | "failed"
+  | "canceled";
+export type TaskType =
+  | "indexCreation"
+  | "indexUpdate"
+  | "indexDeletion"
+  | "indexSwap"
+  | "documentAdditionOrUpdate"
+  | "documentDeletion"
+  | "settingsUpdate"
+  | "dumpCreation"
+  | "taskCancelation"
+  | "taskDeletion"
+  | "snapshotCreation";
+
 export type ClientOptions = {
   host: string;
   apiKey?: string;
@@ -53,4 +72,67 @@ export type SearchResult = {
   limit: number;
   offset: number;
   estimatedTotalHits: number;
+};
+
+export type DocumentsOptions = {
+  offset?: number;
+  limit?: number;
+  fields?: string[];
+};
+
+export type DocumentsResult = {
+  results: { [key: string]: unknown };
+  offset: number;
+  limit: number;
+  total: number;
+};
+
+export type TaskResponse = {
+  taskUid: number;
+  indexUid: string;
+  status: TaskStatus;
+  type: TaskType;
+  enqueuedAt: Date;
+};
+
+export type TaskError = {
+  message: string;
+  code: string;
+  type: string;
+  link: string;
+};
+
+export type Task = {
+  uid: number;
+  indexUid: string;
+  status: TaskStatus;
+  type: TaskType;
+  canceledBy: number | null;
+  details: { [key: string]: unknown };
+  error: TaskError;
+  duration: string;
+  enqueuedAt: Date;
+};
+
+export type TaskOptions = {
+  limit?: number;
+  from?: number;
+  uids?: "*" | number[];
+  statuses?: "*" | string[];
+  types?: "*" | string[];
+  indexUids?: "*" | (string | number)[];
+  canceledBy?: string[];
+  beforeEnqueuedAt?: "*" | Date;
+  beforeStartedAt?: "*" | Date;
+  beforeFinishedAt?: "*" | Date;
+  afterEnqueuedAt?: "*" | Date;
+  afterStartedAt?: "*" | Date;
+  afterFinishedAt?: "*" | Date;
+};
+
+export type TasksResult = {
+  results: Task[];
+  limit: number;
+  from: number;
+  next: number | null;
 };
