@@ -4,6 +4,7 @@ export type TaskStatus =
   | "succeeded"
   | "failed"
   | "canceled";
+
 export type TaskType =
   | "indexCreation"
   | "indexUpdate"
@@ -22,11 +23,23 @@ export type ClientOptions = {
   apiKey?: string;
 };
 
-export type ClientHealthResponse = {
+export type HealthResponse = {
   status: string;
 };
 
-export type ClientIndexesResponse = {
+export type StatsResponse = {
+  databaseSize: number;
+  lastUpdate: Date;
+  indexes: { [key: string]: IndexStats };
+};
+
+export type VersionResponse = {
+  commitSha: string;
+  commitDate: Date;
+  pkgVersion: string;
+};
+
+export type IndexesResponse = {
   results: Array<Index>;
   offset: number;
   limit: number;
@@ -137,7 +150,7 @@ export type TasksResult = {
   next: number | null;
 };
 
-export type TypoTolerance = {
+export type TypoToleranceSettings = {
   enabled: boolean;
   minWordSizeForTypos: { oneTypo: number; twoTypos: number };
   disableOnWords: string[];
@@ -153,7 +166,29 @@ export type SettingsResponse = {
   stopWords: string[];
   synonyms: { [key: string]: unknown };
   distinctAttribute: string;
-  typoTolerance: TypoTolerance;
+  typoTolerance: TypoToleranceSettings;
   faceting: { maxValuesPerFacet: number };
   pagination: { maxTotalHits: number };
+};
+
+export type IndexFacetingSettings = {
+  maxValuesPerFacet: number;
+};
+
+export type IndexPaginationSettings = {
+  maxTotalHits: number;
+};
+
+export type IndexSettings = {
+  displayedAttributes: string[];
+  distinctAttribute: string | null;
+  faceting: IndexFacetingSettings;
+  filterableAttributes: string[];
+  pagination: IndexPaginationSettings;
+  rankingRules: string[];
+  searchableAttributes: string[];
+  sortableAttributes: string[];
+  stopWords: string[];
+  synonyms: { [key: string]: string };
+  typoTolerance: TypoToleranceSettings;
 };

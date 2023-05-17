@@ -1,30 +1,35 @@
 import {
-  ClientHealthResponse,
-  ClientIndexesResponse,
   ClientOptions,
   DocumentsOptions,
   DocumentsResult,
+  HealthResponse,
   Index,
+  IndexesResponse,
+  IndexSettings,
   IndexStats,
   SearchOptions,
   SearchResult,
   SettingsResponse,
+  StatsResponse,
   Task,
   TaskOptions,
   TaskResponse,
   TasksResult,
+  VersionResponse,
 } from "./types.ts";
 
 export class Client {
   private options: ClientOptions;
-  private headers: Headers = new Headers();
+  private headers: Headers = new Headers({
+    "Content-Type": "application/json",
+    "User-Agent": "denosearch",
+  });
 
   constructor(options: ClientOptions) {
     this.options = options;
     if (this.options.apiKey) {
       this.headers.append("Authorization", `Bearer ${this.options.apiKey}`);
     }
-    this.headers.append("Content-Type", "application/json");
   }
 
   async raw(reqStr: string, method?: string, body?: string): Promise<Response> {
@@ -46,12 +51,22 @@ export class Client {
     throw new Error(JSON.stringify(errorJson, null, 2));
   }
 
-  async health(): Promise<ClientHealthResponse> {
+  async health(): Promise<HealthResponse> {
     const healthFetch = await this.raw(`/health`);
     return await healthFetch.json();
   }
 
-  async indexes(): Promise<ClientIndexesResponse> {
+  async stats(): Promise<StatsResponse> {
+    const statsFetch = await this.raw(`/stats`);
+    return await statsFetch.json();
+  }
+
+  async version(): Promise<VersionResponse> {
+    const versionFetch = await this.raw(`/version`);
+    return await versionFetch.json();
+  }
+
+  async indexes(): Promise<IndexesResponse> {
     const indexesFetch = await this.raw(`/indexes`);
     return await indexesFetch.json();
   }
@@ -135,6 +150,23 @@ export class IndexResponse {
   async settingsGet(): Promise<SettingsResponse> {
     const settingsFetch = await this.#clientInstance.raw(
       `/indexes/${this.uid}/settings`,
+    );
+    return await settingsFetch.json();
+  }
+
+  async settingsUpdate(settings: IndexSettings): Promise<Task> {
+    const settingsFetch = await this.#clientInstance.raw(
+      `/indexes/${this.uid}/settings`,
+      "PATCH",
+      JSON.stringify(settings),
+    );
+    return await settingsFetch.json();
+  }
+
+  async settingsReset(): Promise<Task> {
+    const settingsFetch = await this.#clientInstance.raw(
+      `/indexes/${this.uid}/settings`,
+      "DELETE",
     );
     return await settingsFetch.json();
   }
