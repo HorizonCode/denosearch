@@ -52,6 +52,7 @@ export class Client {
     reqStr: string,
     method?: string,
     body?: string,
+  // deno-lint-ignore no-explicit-any
   ): Promise<any> {
     let fetchResult;
     try {
