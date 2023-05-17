@@ -155,7 +155,7 @@ console.log(deleteResponse);
 
 ```typescript
 const index = await meiliClient.indexCreate('movies', 'id');
-const task = await meiliClient.taskCheck(index).waitUponCompletion();
+const task = await index.waitUponCompletion();
 console.log(task); //Index was created
 ```
 
