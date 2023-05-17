@@ -16,6 +16,8 @@ import {
   TaskOptions,
   TaskResponse,
   TasksResult,
+  TaskStatus,
+  TaskType,
   VersionResponse,
 } from "./types.ts";
 
@@ -122,14 +124,17 @@ export class Client {
   async indexCreate(
     indexName: string,
     primaryKey?: string,
-  ): Promise<TaskResponse> {
-    return await this.raw(
-      `/indexes`,
-      "POST",
-      JSON.stringify({
-        uid: indexName,
-        primaryKey,
-      }),
+  ): Promise<AwaitableTask> {
+    return new AwaitableTask(
+      this,
+      await this.raw(
+        `/indexes`,
+        "POST",
+        JSON.stringify({
+          uid: indexName,
+          primaryKey,
+        }),
+      ),
     );
   }
 
@@ -140,10 +145,13 @@ export class Client {
     );
   }
 
-  async indexDelete(indexName: string): Promise<TaskResponse> {
-    return await this.raw(
-      `/indexes/${indexName}`,
-      "DELETE",
+  async indexDelete(indexName: string): Promise<AwaitableTask> {
+    return new AwaitableTask(
+      this,
+      await this.raw(
+        `/indexes/${indexName}`,
+        "DELETE",
+      ),
     );
   }
 
@@ -168,10 +176,6 @@ export class Client {
     return await this.raw(
       `/tasks/${taskId}`,
     );
-  }
-
-  taskCheck(task: TaskResponse): TaskChecker {
-    return new TaskChecker(this, task);
   }
 }
 
@@ -201,18 +205,24 @@ export class IndexResponse {
     );
   }
 
-  async settingsUpdate(settings: IndexSettings): Promise<Task> {
-    return await this.#clientInstance.raw(
-      `/indexes/${this.uid}/settings`,
-      "PATCH",
-      JSON.stringify(settings),
+  async settingsUpdate(settings: IndexSettings): Promise<AwaitableTask> {
+    return new AwaitableTask(
+      this.#clientInstance,
+      await this.#clientInstance.raw(
+        `/indexes/${this.uid}/settings`,
+        "PATCH",
+        JSON.stringify(settings),
+      ),
     );
   }
 
-  async settingsReset(): Promise<Task> {
-    return await this.#clientInstance.raw(
-      `/indexes/${this.uid}/settings`,
-      "DELETE",
+  async settingsReset(): Promise<AwaitableTask> {
+    return new AwaitableTask(
+      this.#clientInstance,
+      await this.#clientInstance.raw(
+        `/indexes/${this.uid}/settings`,
+        "DELETE",
+      ),
     );
   }
 
@@ -246,56 +256,71 @@ export class IndexResponse {
   async documentsAddOrReplace(
     objectOrArray: { [key: string]: unknown } | { [key: string]: unknown }[],
     primaryKey?: number | string,
-  ): Promise<TaskResponse> {
+  ): Promise<AwaitableTask> {
     const objectArray = Array.isArray(objectOrArray)
       ? objectOrArray
       : [objectOrArray];
-    return await this.#clientInstance.raw(
-      `/indexes/${this.uid}/documents${
-        primaryKey ? `?primaryKey=${primaryKey}` : ""
-      }`,
-      "POST",
-      JSON.stringify(objectArray ?? []),
+    return new AwaitableTask(
+      this.#clientInstance,
+      await this.#clientInstance.raw(
+        `/indexes/${this.uid}/documents${
+          primaryKey ? `?primaryKey=${primaryKey}` : ""
+        }`,
+        "POST",
+        JSON.stringify(objectArray ?? []),
+      ),
     );
   }
 
   async documentsAddOrUpdate(
     objectOrArray: { [key: string]: unknown } | { [key: string]: unknown }[],
     primaryKey?: number | string,
-  ): Promise<TaskResponse> {
+  ): Promise<AwaitableTask> {
     const objectArray = Array.isArray(objectOrArray)
       ? objectOrArray
       : [objectOrArray];
-    return await this.#clientInstance.raw(
-      `/indexes/${this.uid}/documents${
-        primaryKey ? `?primaryKey=${primaryKey}` : ""
-      }`,
-      "PUT",
-      JSON.stringify(objectArray ?? []),
+    return new AwaitableTask(
+      this.#clientInstance,
+      await this.#clientInstance.raw(
+        `/indexes/${this.uid}/documents${
+          primaryKey ? `?primaryKey=${primaryKey}` : ""
+        }`,
+        "PUT",
+        JSON.stringify(objectArray ?? []),
+      ),
     );
   }
 
-  async documentsDeleteAll(): Promise<TaskResponse> {
-    return await this.#clientInstance.raw(
-      `/indexes/${this.uid}/documents`,
-      "DELETE",
+  async documentsDeleteAll(): Promise<AwaitableTask> {
+    return new AwaitableTask(
+      this.#clientInstance,
+      await this.#clientInstance.raw(
+        `/indexes/${this.uid}/documents`,
+        "DELETE",
+      ),
     );
   }
 
-  async documentDelete(documentId: number | string): Promise<TaskResponse> {
-    return await this.#clientInstance.raw(
-      `/indexes/${this.uid}/documents/${documentId}`,
-      "DELETE",
+  async documentDelete(documentId: number | string): Promise<AwaitableTask> {
+    return new AwaitableTask(
+      this.#clientInstance,
+      await this.#clientInstance.raw(
+        `/indexes/${this.uid}/documents/${documentId}`,
+        "DELETE",
+      ),
     );
   }
 
   async documentDeleteByBatch(
     documentIds: (string | number)[],
-  ): Promise<TaskResponse> {
-    return await this.#clientInstance.raw(
-      `/indexes/${this.uid}/documents`,
-      "DELETE",
-      JSON.stringify(documentIds),
+  ): Promise<AwaitableTask> {
+    return new AwaitableTask(
+      this.#clientInstance,
+      await this.#clientInstance.raw(
+        `/indexes/${this.uid}/documents`,
+        "DELETE",
+        JSON.stringify(documentIds),
+      ),
     );
   }
 
@@ -322,36 +347,50 @@ export class Tasks {
     this.next = result.next;
   }
 
-  async cancel(): Promise<TaskResponse> {
+  async cancel(): Promise<AwaitableTask> {
     const tasksToCancel = this.results.reduce((acc, task) => {
       const taskUid = `${task.uid}`;
       return acc ? `${acc},${taskUid}` : taskUid;
     }, "");
-    return await this.#clientInstance.raw(
-      `/tasks/cancel?uids=${tasksToCancel}`,
-      "POST",
+    return new AwaitableTask(
+      this.#clientInstance,
+      await this.#clientInstance.raw(
+        `/tasks/cancel?uids=${tasksToCancel}`,
+        "POST",
+      ),
     );
   }
 
-  async delete(): Promise<TaskResponse> {
+  async delete(): Promise<AwaitableTask> {
     const tasksToDelete = this.results.reduce((acc, task) => {
       const taskUid = `${task.uid}`;
       return acc ? `${acc},${taskUid}` : taskUid;
     }, "");
-    return await this.#clientInstance.raw(
-      `/tasks?uids=${tasksToDelete}`,
-      "DELETE",
+    return new AwaitableTask(
+      this.#clientInstance,
+      await this.#clientInstance.raw(
+        `/tasks?uids=${tasksToDelete}`,
+        "DELETE",
+      ),
     );
   }
 }
 
-class TaskChecker {
+export class AwaitableTask {
   #clientInstance: Client;
-  #taskResponse: TaskResponse;
+  taskUid: number;
+  indexUid: string;
+  status: TaskStatus;
+  type: TaskType;
+  enqueuedAt: Date;
 
   constructor(clientInstance: Client, taskResponse: TaskResponse) {
     this.#clientInstance = clientInstance;
-    this.#taskResponse = taskResponse;
+    this.taskUid = taskResponse.taskUid;
+    this.indexUid = taskResponse.indexUid;
+    this.status = taskResponse.status;
+    this.type = taskResponse.type;
+    this.enqueuedAt = taskResponse.enqueuedAt;
   }
 
   waitUponCompletion(): Promise<Task> {
@@ -359,7 +398,7 @@ class TaskChecker {
       const taskNumber = setInterval(
         async () => {
           const checkedTask = await this.#clientInstance.task(
-            this.#taskResponse.taskUid,
+            this.taskUid,
           );
           if (
             checkedTask.status != "enqueued" &&

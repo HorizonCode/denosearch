@@ -42,7 +42,7 @@ export type VersionResponse = {
 export type IndexesOptions = {
   offset?: number;
   limit?: number;
-}
+};
 
 export type IndexesResponse = {
   results: Array<Index>;
