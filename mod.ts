@@ -43,12 +43,13 @@ export class Client {
     } catch (_err) {
       throw new Error("Failed to connect to meilisearch instance");
     }
-    if (fetchResult.status == 200 || fetchResult.status == 202) {
-      return fetchResult;
+
+    if (!fetchResult.ok) {
+      const errorJson = await fetchResult.json();
+      throw new Error(JSON.stringify(errorJson, null, 2));
     }
 
-    const errorJson = await fetchResult.json();
-    throw new Error(JSON.stringify(errorJson, null, 2));
+    return fetchResult;
   }
 
   async health(): Promise<HealthResponse> {
