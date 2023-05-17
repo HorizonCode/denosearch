@@ -19,9 +19,6 @@ import {
 } from "./types.ts";
 
 export class Client {
-  #iso8061Regex = new RegExp(
-    /^(?:\d{4})-(?:\d{2})-(?:\d{2})T(?:\d{2}):(?:\d{2}):(?:\d{2}(?:\.\d*)?)(?:(?:-(?:\d{2}):(?:\d{2})|Z)?)$/g,
-  );
   private options: ClientOptions;
   private headers: Headers = new Headers({
     "Content-Type": "application/json",
