@@ -180,15 +180,15 @@ export type IndexPaginationSettings = {
 };
 
 export type IndexSettings = {
-  displayedAttributes: string[];
-  distinctAttribute: string | null;
-  faceting: IndexFacetingSettings;
-  filterableAttributes: string[];
-  pagination: IndexPaginationSettings;
-  rankingRules: string[];
-  searchableAttributes: string[];
-  sortableAttributes: string[];
-  stopWords: string[];
-  synonyms: { [key: string]: string };
-  typoTolerance: TypoToleranceSettings;
+  displayedAttributes?: string[];
+  distinctAttribute?: string | null;
+  faceting?: IndexFacetingSettings;
+  filterableAttributes?: string[];
+  pagination?: IndexPaginationSettings;
+  rankingRules?: string[];
+  searchableAttributes?: string[];
+  sortableAttributes?: string[];
+  stopWords?: string[];
+  synonyms?: { [key: string]: string };
+  typoTolerance?: TypoToleranceSettings;
 };
