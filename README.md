@@ -30,7 +30,7 @@ console.log(health);
 ### List indexes
 
 ```typescript
-const indexes = await client.indexes();
+const indexes = await client.indexList();
 console.log(indexes);
 ```
 
@@ -70,7 +70,7 @@ console.log(document);
 ```typescript
 const index = await client.index("movies");
 const data = { id: 1, title: "Document 1" };
-const response = await index.addOrReplace(data, "id");
+const response = await index.documentsAddOrReplace(data, "id");
 console.log(response);
 ```
 
@@ -79,7 +79,7 @@ console.log(response);
 ```typescript
 const index = await client.index("movies");
 const data = { id: 1, title: "Updated Document 1" };
-const response = await index.addOrUpdate(data, "id");
+const response = await index.documentsAddOrUpdate(data, "id");
 console.log(response);
 ```
 
@@ -87,7 +87,7 @@ console.log(response);
 
 ```typescript
 const index = await client.index("movies");
-const response = await index.deleteAll();
+const response = await index.documentsDeleteAll();
 console.log(response);
 ```
 
@@ -95,7 +95,7 @@ console.log(response);
 
 ```typescript
 const index = await client.index("movies");
-const response = await index.delete("document_id");
+const response = await index.documentDelete("document_id");
 console.log(response);
 ```
 
@@ -104,7 +104,7 @@ console.log(response);
 ```typescript
 const index = await client.index("movies");
 const documentIds = ["id1", "id2", "id3"];
-const response = await index.deleteByBatch(documentIds);
+const response = await index.documentsDeleteByBatch(documentIds);
 console.log(response);
 ```
 
@@ -124,7 +124,7 @@ console.log(result);
 ### Get tasks
 
 ```typescript
-const tasks = await client.tasks();
+const tasks = await client.taskList();
 console.log(tasks);
 ```
 
@@ -138,7 +138,7 @@ console.log(task);
 ### Cancel tasks
 
 ```typescript
-const tasks = await client.tasks();
+const tasks = await client.taskList();
 const cancelResponse = await tasks.cancel();
 console.log(cancelResponse);
 ```
@@ -146,9 +146,17 @@ console.log(cancelResponse);
 ### Delete tasks
 
 ```typescript
-const tasks = await client.tasks();
+const tasks = await client.taskList();
 const deleteResponse = await tasks.delete();
 console.log(deleteResponse);
+```
+
+### Wait for task completion
+
+```typescript
+const index = await meiliClient.indexCreate('movies', 'id');
+const task = await meiliClient.taskCheck(index).waitUponCompletion();
+console.log(task); //Index was created
 ```
 
 Note: Please replace `"YOUR_API_KEY"` with your actual MeiliSearch API key and `"http://localhost:7700"` with the URL of your MeiliSearch instance.

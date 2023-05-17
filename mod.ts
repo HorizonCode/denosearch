@@ -103,7 +103,7 @@ export class Client {
     return await this.raw(`/version`);
   }
 
-  async indexes(options?: IndexesOptions): Promise<IndexesResponse> {
+  async indexList(options?: IndexesOptions): Promise<IndexesResponse> {
     let queryParams;
     if (options) {
       queryParams = Object.entries(options)
@@ -119,30 +119,35 @@ export class Client {
     return new IndexResponse(this, await this.raw(`/indexes/${indexName}`));
   }
 
-  async create(indexName: string, primaryKey?: string): Promise<TaskResponse> {
+  async indexCreate(
+    indexName: string,
+    primaryKey?: string,
+  ): Promise<TaskResponse> {
     return await this.raw(
-      `/indexes?uid=${indexName}${
-        primaryKey ? `&primaryKey=${primaryKey}` : ""
-      }`,
+      `/indexes`,
       "POST",
+      JSON.stringify({
+        uid: indexName,
+        primaryKey,
+      }),
     );
   }
 
-  async update(indexName: string, primaryKey: string | null) {
+  async indexUpdate(indexName: string, primaryKey: string | null) {
     return await this.raw(
       `/indexes?uid=${indexName}&primaryKey=${primaryKey}`,
       "PATCH",
     );
   }
 
-  async delete(indexName: string): Promise<TaskResponse> {
+  async indexDelete(indexName: string): Promise<TaskResponse> {
     return await this.raw(
       `/indexes/${indexName}`,
       "DELETE",
     );
   }
 
-  async tasks(options?: TaskOptions): Promise<Tasks> {
+  async taskList(options?: TaskOptions): Promise<Tasks> {
     let queryParams;
     if (options) {
       queryParams = Object.entries(options)
@@ -163,6 +168,10 @@ export class Client {
     return await this.raw(
       `/tasks/${taskId}`,
     );
+  }
+
+  taskCheck(task: TaskResponse): TaskChecker {
+    return new TaskChecker(this, task);
   }
 }
 
@@ -234,7 +243,7 @@ export class IndexResponse {
     );
   }
 
-  async addOrReplace(
+  async documentsAddOrReplace(
     objectOrArray: { [key: string]: unknown } | { [key: string]: unknown }[],
     primaryKey?: number | string,
   ): Promise<TaskResponse> {
@@ -250,7 +259,7 @@ export class IndexResponse {
     );
   }
 
-  async addOrUpdate(
+  async documentsAddOrUpdate(
     objectOrArray: { [key: string]: unknown } | { [key: string]: unknown }[],
     primaryKey?: number | string,
   ): Promise<TaskResponse> {
@@ -266,21 +275,23 @@ export class IndexResponse {
     );
   }
 
-  async deleteAll(): Promise<TaskResponse> {
+  async documentsDeleteAll(): Promise<TaskResponse> {
     return await this.#clientInstance.raw(
       `/indexes/${this.uid}/documents`,
       "DELETE",
     );
   }
 
-  async delete(documentId: number | string): Promise<TaskResponse> {
+  async documentDelete(documentId: number | string): Promise<TaskResponse> {
     return await this.#clientInstance.raw(
       `/indexes/${this.uid}/documents/${documentId}`,
       "DELETE",
     );
   }
 
-  async deleteByBatch(documentIds: (string | number)[]): Promise<TaskResponse> {
+  async documentDeleteByBatch(
+    documentIds: (string | number)[],
+  ): Promise<TaskResponse> {
     return await this.#clientInstance.raw(
       `/indexes/${this.uid}/documents`,
       "DELETE",
@@ -331,5 +342,35 @@ export class Tasks {
       `/tasks?uids=${tasksToDelete}`,
       "DELETE",
     );
+  }
+}
+
+class TaskChecker {
+  #clientInstance: Client;
+  #taskResponse: TaskResponse;
+
+  constructor(clientInstance: Client, taskResponse: TaskResponse) {
+    this.#clientInstance = clientInstance;
+    this.#taskResponse = taskResponse;
+  }
+
+  waitUponCompletion(): Promise<Task> {
+    return new Promise<Task>((resolve) => {
+      const taskNumber = setInterval(
+        async () => {
+          const checkedTask = await this.#clientInstance.task(
+            this.#taskResponse.taskUid,
+          );
+          if (
+            checkedTask.status != "enqueued" &&
+            checkedTask.status != "processing"
+          ) {
+            clearInterval(taskNumber);
+            resolve(checkedTask);
+          }
+        },
+        1000,
+      );
+    });
   }
 }
