@@ -35,12 +35,27 @@ export class Client {
     }
   }
 
-  #convertStringToDate(obj: { [key: string]: unknown }) {
+  #isValidDate(date: Date) {
+    return date instanceof Date && !isNaN(date.getTime());
+  }
+
+  #convertStringToDate(
+    obj: { [key: string]: unknown },
+  ): { [key: string]: unknown } {
     const entries = Object.entries(obj);
     for (const [key, value] of entries) {
-      if (typeof (value) == "string") {
-        if (this.#iso8061Regex.test(value)) {
-          obj[key] = new Date(value);
+      if (typeof value === "string") {
+        const newDate = new Date(value);
+        if (this.#isValidDate(newDate)) {
+          obj[key] = newDate;
+        }
+      } else if (typeof value === "object" && value !== null) {
+        if (Array.isArray(value)) {
+          for (let i = 0; i < value.length; i++) {
+            this.#convertStringToDate(value[i] as { [key: string]: unknown });
+          }
+        } else {
+          this.#convertStringToDate(value as { [key: string]: unknown });
         }
       }
     }
@@ -52,7 +67,7 @@ export class Client {
     reqStr: string,
     method?: string,
     body?: string,
-  // deno-lint-ignore no-explicit-any
+    // deno-lint-ignore no-explicit-any
   ): Promise<any> {
     let fetchResult;
     try {
