@@ -4,6 +4,7 @@ import {
   DocumentsResult,
   HealthResponse,
   Index,
+  IndexesOptions,
   IndexesResponse,
   IndexSettings,
   IndexStats,
@@ -102,8 +103,16 @@ export class Client {
     return await this.raw(`/version`);
   }
 
-  async indexes(): Promise<IndexesResponse> {
-    return await this.raw(`/indexes`);
+  async indexes(options?: IndexesOptions): Promise<IndexesResponse> {
+    let queryParams;
+    if (options) {
+      queryParams = Object.entries(options)
+        .reduce((acc, [key, value]) => {
+          const queryEntry = `${key}=${value}`;
+          return acc ? `${acc}&${queryEntry}` : queryEntry;
+        }, "");
+    }
+    return await this.raw(`/indexes${queryParams ? `?${queryParams}` : ""}`);
   }
 
   async index(indexName: string): Promise<IndexResponse> {
