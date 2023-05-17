@@ -45,6 +45,11 @@ export class Client {
     }
 
     if (!fetchResult.ok) {
+      const isJson =
+        fetchResult.headers.get("content-type") == "application/json";
+      if (!isJson) {
+        throw new Error("Could not parse json error");
+      }
       const errorJson = await fetchResult.json();
       throw new Error(JSON.stringify(errorJson, null, 2));
     }
