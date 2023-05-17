@@ -1,7 +1,7 @@
 # denosearch
 denosearch is a wrapper for the MeiliSearch API in Deno. It provides a simple and convenient way to interact with the MeiliSearch API.
 
-> **⚠️ WARNING: This MeiliSearch wrapper is currently under heavy development, and breaking changes may occur frequently. It's currently not recommended to use this in production environments. ⚠️**
+> **⚠️ WARNING: This MeiliSearch wrapper is currently under heavy development, and breaking changes may occur frequently. It's currently not recommended to use this in production environments at current state. ⚠️**
 
 ## Usage
 
