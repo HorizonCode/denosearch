@@ -135,8 +135,8 @@ export class Client {
 export class IndexResponse {
   #clientInstance: Client;
   uid: string;
-  createdAt: Date;
-  updatedAt: Date;
+  createdAt: string;
+  updatedAt: string;
   primaryKey: string;
   constructor(clientInstance: Client, indexType: Index) {
     this.#clientInstance = clientInstance;
