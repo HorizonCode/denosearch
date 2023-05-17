@@ -110,7 +110,15 @@ export class Client {
     if (options) {
       queryParams = Object.entries(options)
         .reduce((acc, [key, value]) => {
-          const queryEntry = `${key}=${value}`;
+          const val: unknown = value;
+          let queryEntry = `${key}=`;
+          if (val instanceof Date) {
+            queryEntry += val.toISOString();
+          } else if (val instanceof Array) {
+            queryEntry += val.join(",");
+          } else {
+            queryEntry += val;
+          }
           return acc ? `${acc}&${queryEntry}` : queryEntry;
         }, "");
     }
@@ -160,7 +168,15 @@ export class Client {
     if (options) {
       queryParams = Object.entries(options)
         .reduce((acc, [key, value]) => {
-          const queryEntry = `${key}=${value}`;
+          const val: unknown = value;
+          let queryEntry = `${key}=`;
+          if (val instanceof Date) {
+            queryEntry += val.toISOString();
+          } else if (val instanceof Array) {
+            queryEntry += val.join(",");
+          } else {
+            queryEntry += val;
+          }
           return acc ? `${acc}&${queryEntry}` : queryEntry;
         }, "");
     }
@@ -233,7 +249,15 @@ export class IndexResponse {
     if (options) {
       queryParams = Object.entries(options)
         .reduce((acc, [key, value]) => {
-          const queryEntry = `${key}=${value}`;
+          const val: unknown = value;
+          let queryEntry = `${key}=`;
+          if (val instanceof Date) {
+            queryEntry += val.toISOString();
+          } else if (val instanceof Array) {
+            queryEntry += val.join(",");
+          } else {
+            queryEntry += val;
+          }
           return acc ? `${acc}&${queryEntry}` : queryEntry;
         }, "");
     }
