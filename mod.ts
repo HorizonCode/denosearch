@@ -19,6 +19,9 @@ import {
 } from "./types.ts";
 
 export class Client {
+  #iso8061Regex = new RegExp(
+    /^(?:\d{4})-(?:\d{2})-(?:\d{2})T(?:\d{2}):(?:\d{2}):(?:\d{2}(?:\.\d*)?)(?:(?:-(?:\d{2}):(?:\d{2})|Z)?)$/g,
+  );
   private options: ClientOptions;
   private headers: Headers = new Headers({
     "Content-Type": "application/json",
@@ -32,7 +35,24 @@ export class Client {
     }
   }
 
-  async raw(reqStr: string, method?: string, body?: string): Promise<Response> {
+  #convertStringToDate(obj: { [key: string]: unknown }) {
+    const entries = Object.entries(obj);
+    for (const [key, value] of entries) {
+      if (typeof (value) == "string") {
+        if (this.#iso8061Regex.test(value)) {
+          obj[key] = new Date(value);
+        }
+      }
+    }
+
+    return obj;
+  }
+
+  async raw(
+    reqStr: string,
+    method?: string,
+    body?: string,
+  ): Promise<any> {
     let fetchResult;
     try {
       fetchResult = await fetch(`${this.options.host}${reqStr}`, {
@@ -54,59 +74,50 @@ export class Client {
       throw new Error(JSON.stringify(errorJson, null, 2));
     }
 
-    return fetchResult;
+    return this.#convertStringToDate(await fetchResult.json());
   }
 
   async health(): Promise<HealthResponse> {
-    const healthFetch = await this.raw(`/health`);
-    return await healthFetch.json();
+    return await this.raw(`/health`);
   }
 
   async stats(): Promise<StatsResponse> {
-    const statsFetch = await this.raw(`/stats`);
-    return await statsFetch.json();
+    return await this.raw(`/stats`);
   }
 
   async version(): Promise<VersionResponse> {
-    const versionFetch = await this.raw(`/version`);
-    return await versionFetch.json();
+    return await this.raw(`/version`);
   }
 
   async indexes(): Promise<IndexesResponse> {
-    const indexesFetch = await this.raw(`/indexes`);
-    return await indexesFetch.json();
+    return await this.raw(`/indexes`);
   }
 
   async index(indexName: string): Promise<IndexResponse> {
-    const indexFetch = await this.raw(`/indexes/${indexName}`);
-    const indexJson = await indexFetch.json();
-    return new IndexResponse(this, indexJson);
+    return new IndexResponse(this, await this.raw(`/indexes/${indexName}`));
   }
 
   async create(indexName: string, primaryKey?: string): Promise<TaskResponse> {
-    const indexCreateFetch = await this.raw(
+    return await this.raw(
       `/indexes?uid=${indexName}${
         primaryKey ? `&primaryKey=${primaryKey}` : ""
       }`,
       "POST",
     );
-    return await indexCreateFetch.json();
   }
 
   async update(indexName: string, primaryKey: string | null) {
-    const indexUpdateFetch = await this.raw(
+    return await this.raw(
       `/indexes?uid=${indexName}&primaryKey=${primaryKey}`,
       "PATCH",
     );
-    return await indexUpdateFetch.json();
   }
 
   async delete(indexName: string): Promise<TaskResponse> {
-    const indexDeleteFetch = await this.raw(
+    return await this.raw(
       `/indexes/${indexName}`,
       "DELETE",
     );
-    return await indexDeleteFetch.json();
   }
 
   async tasks(options?: TaskOptions): Promise<Tasks> {
@@ -118,63 +129,60 @@ export class Client {
           return acc ? `${acc}&${queryEntry}` : queryEntry;
         }, "");
     }
-    const tasksFetch = await this.raw(
-      `/tasks${queryParams ? `?${queryParams}` : ""}`,
+    return new Tasks(
+      this,
+      await this.raw(
+        `/tasks${queryParams ? `?${queryParams}` : ""}`,
+      ),
     );
-    return new Tasks(this, await tasksFetch.json());
   }
 
   async task(taskId: number): Promise<Task> {
-    const taskFetch = await this.raw(
+    return await this.raw(
       `/tasks/${taskId}`,
     );
-    return await taskFetch.json();
   }
 }
 
 export class IndexResponse {
   #clientInstance: Client;
   uid: string;
-  createdAt: string;
-  updatedAt: string;
+  createdAt: Date;
+  updatedAt: Date;
   primaryKey: string;
   constructor(clientInstance: Client, indexType: Index) {
     this.#clientInstance = clientInstance;
     this.uid = indexType.uid;
-    this.createdAt = indexType.createdAt;
-    this.updatedAt = indexType.updatedAt;
+    this.createdAt = new Date(indexType.createdAt);
+    this.updatedAt = new Date(indexType.updatedAt);
     this.primaryKey = indexType.primaryKey;
   }
 
   async stats(): Promise<IndexStats> {
-    const statsFetch = await this.#clientInstance.raw(
+    return await this.#clientInstance.raw(
       `/indexes/${this.uid}/stats`,
     );
-    return await statsFetch.json();
   }
 
   async settingsGet(): Promise<SettingsResponse> {
-    const settingsFetch = await this.#clientInstance.raw(
+    return await this.#clientInstance.raw(
       `/indexes/${this.uid}/settings`,
     );
-    return await settingsFetch.json();
   }
 
   async settingsUpdate(settings: IndexSettings): Promise<Task> {
-    const settingsFetch = await this.#clientInstance.raw(
+    return await this.#clientInstance.raw(
       `/indexes/${this.uid}/settings`,
       "PATCH",
       JSON.stringify(settings),
     );
-    return await settingsFetch.json();
   }
 
   async settingsReset(): Promise<Task> {
-    const settingsFetch = await this.#clientInstance.raw(
+    return await this.#clientInstance.raw(
       `/indexes/${this.uid}/settings`,
       "DELETE",
     );
-    return await settingsFetch.json();
   }
 
   async documents(
@@ -188,22 +196,20 @@ export class IndexResponse {
           return acc ? `${acc}&${queryEntry}` : queryEntry;
         }, "");
     }
-    const documentsFetch = await this.#clientInstance.raw(
+    return await this.#clientInstance.raw(
       `/indexes/${this.uid}/documents${queryParams ? `?${queryParams}` : ""}`,
     );
-    return await documentsFetch.json();
   }
 
   async document(
     documentId: number | string,
     fields?: string[],
   ): Promise<{ [key: string]: unknown }> {
-    const documentFetch = await this.#clientInstance.raw(
+    return await this.#clientInstance.raw(
       `/indexes/${this.uid}/documents/${documentId}${
         fields ? `?fields=${fields.join(",")}` : ""
       }`,
     );
-    return await documentFetch.json();
   }
 
   async addOrReplace(
@@ -213,14 +219,13 @@ export class IndexResponse {
     const objectArray = Array.isArray(objectOrArray)
       ? objectOrArray
       : [objectOrArray];
-    const addOrReplaceFetch = await this.#clientInstance.raw(
+    return await this.#clientInstance.raw(
       `/indexes/${this.uid}/documents${
         primaryKey ? `?primaryKey=${primaryKey}` : ""
       }`,
       "POST",
       JSON.stringify(objectArray ?? []),
     );
-    return addOrReplaceFetch.json();
   }
 
   async addOrUpdate(
@@ -230,48 +235,43 @@ export class IndexResponse {
     const objectArray = Array.isArray(objectOrArray)
       ? objectOrArray
       : [objectOrArray];
-    const addOrReplaceFetch = await this.#clientInstance.raw(
+    return await this.#clientInstance.raw(
       `/indexes/${this.uid}/documents${
         primaryKey ? `?primaryKey=${primaryKey}` : ""
       }`,
       "PUT",
       JSON.stringify(objectArray ?? []),
     );
-    return addOrReplaceFetch.json();
   }
 
   async deleteAll(): Promise<TaskResponse> {
-    const deleteAllFetch = await this.#clientInstance.raw(
+    return await this.#clientInstance.raw(
       `/indexes/${this.uid}/documents`,
       "DELETE",
     );
-    return await deleteAllFetch.json();
   }
 
   async delete(documentId: number | string): Promise<TaskResponse> {
-    const deleteAllFetch = await this.#clientInstance.raw(
+    return await this.#clientInstance.raw(
       `/indexes/${this.uid}/documents/${documentId}`,
       "DELETE",
     );
-    return await deleteAllFetch.json();
   }
 
   async deleteByBatch(documentIds: (string | number)[]): Promise<TaskResponse> {
-    const deleteAllFetch = await this.#clientInstance.raw(
+    return await this.#clientInstance.raw(
       `/indexes/${this.uid}/documents`,
       "DELETE",
       JSON.stringify(documentIds),
     );
-    return await deleteAllFetch.json();
   }
 
   async search(options?: SearchOptions): Promise<SearchResult> {
-    const searchFetch = await this.#clientInstance.raw(
+    return await this.#clientInstance.raw(
       `/indexes/${this.uid}/search`,
       "POST",
       JSON.stringify(options ?? {}),
     );
-    return await searchFetch.json();
   }
 }
 
@@ -294,11 +294,10 @@ export class Tasks {
       const taskUid = `${task.uid}`;
       return acc ? `${acc},${taskUid}` : taskUid;
     }, "");
-    const cancelResult = await this.#clientInstance.raw(
+    return await this.#clientInstance.raw(
       `/tasks/cancel?uids=${tasksToCancel}`,
       "POST",
     );
-    return await cancelResult.json();
   }
 
   async delete(): Promise<TaskResponse> {
@@ -306,10 +305,9 @@ export class Tasks {
       const taskUid = `${task.uid}`;
       return acc ? `${acc},${taskUid}` : taskUid;
     }, "");
-    const cancelResult = await this.#clientInstance.raw(
+    return await this.#clientInstance.raw(
       `/tasks?uids=${tasksToDelete}`,
       "DELETE",
     );
-    return await cancelResult.json();
   }
 }
