@@ -29,13 +29,13 @@ export type HealthResponse = {
 
 export type StatsResponse = {
   databaseSize: number;
-  lastUpdate: string;
+  lastUpdate: Date;
   indexes: { [key: string]: IndexStats };
 };
 
 export type VersionResponse = {
   commitSha: string;
-  commitDate: string;
+  commitDate: Date;
   pkgVersion: string;
 };
 
@@ -48,8 +48,8 @@ export type IndexesResponse = {
 
 export type Index = {
   uid: string;
-  createdAt: string;
-  updatedAt: string;
+  createdAt: Date;
+  updatedAt: Date;
   primaryKey: string;
 };
 
@@ -105,7 +105,7 @@ export type TaskResponse = {
   indexUid: string;
   status: TaskStatus;
   type: TaskType;
-  enqueuedAt: string;
+  enqueuedAt: Date;
 };
 
 export type TaskError = {
@@ -124,7 +124,7 @@ export type Task = {
   details: { [key: string]: unknown };
   error: TaskError;
   duration: string;
-  enqueuedAt: string;
+  enqueuedAt: Date;
 };
 
 export type TaskOptions = {
