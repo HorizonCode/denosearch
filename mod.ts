@@ -22,6 +22,8 @@ import {
 } from "./types.ts";
 
 export class Client {
+  #isoDateRegex =
+    /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2}(?:\.\d*)?)((-(\d{2}):(\d{2})|Z)?)$/gm;
   private options: ClientOptions;
   private headers: Headers = new Headers({
     "Content-Type": "application/json",
@@ -46,7 +48,11 @@ export class Client {
     for (const [key, value] of entries) {
       if (typeof value === "string") {
         const newDate = new Date(value);
-        if (this.#isValidDate(newDate)) {
+        console.log(newDate, value);
+        if (
+          this.#isValidDate(newDate) &&
+          this.#isoDateRegex.test(value)
+        ) {
           obj[key] = newDate;
         }
       } else if (typeof value === "object" && value !== null) {
