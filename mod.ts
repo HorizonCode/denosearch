@@ -48,7 +48,6 @@ export class Client {
     for (const [key, value] of entries) {
       if (typeof value === "string") {
         const newDate = new Date(value);
-        console.log(newDate, value);
         if (
           this.#isValidDate(newDate) &&
           this.#isoDateRegex.test(value)
