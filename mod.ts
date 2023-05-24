@@ -76,7 +76,12 @@ export class Client {
   ): Promise<any> {
     let fetchResult;
     try {
-      fetchResult = await fetch(`${this.options.host}${reqStr}`, {
+      const hostUrl = `${this.options.host.startsWith("http://") ||
+        this.options.host.startsWith("https://")
+        ? `${this.options.host}`
+        : `http://${this.options.host}`
+        }`;
+      fetchResult = await fetch(`${hostUrl}${reqStr}`, {
         headers: this.headers,
         method,
         body,
@@ -276,8 +281,7 @@ export class IndexResponse {
     fields?: string[],
   ): Promise<{ [key: string]: unknown }> {
     return await this.#clientInstance.raw(
-      `/indexes/${this.uid}/documents/${documentId}${
-        fields ? `?fields=${fields.join(",")}` : ""
+      `/indexes/${this.uid}/documents/${documentId}${fields ? `?fields=${fields.join(",")}` : ""
       }`,
     );
   }
@@ -292,13 +296,35 @@ export class IndexResponse {
     return new AwaitableTask(
       this.#clientInstance,
       await this.#clientInstance.raw(
-        `/indexes/${this.uid}/documents${
-          primaryKey ? `?primaryKey=${primaryKey}` : ""
+        `/indexes/${this.uid}/documents${primaryKey ? `?primaryKey=${primaryKey}` : ""
         }`,
         "POST",
         JSON.stringify(objectArray ?? []),
       ),
     );
+  }
+
+  async documentsAddOrReplaceInBatches(
+    objectOrArray: { [key: string]: unknown } | { [key: string]: unknown }[],
+    batchSize = 1000,
+    primaryKey?: number | string,
+  ): Promise<AwaitableTask[]> {
+    const objectArray = Array.isArray(objectOrArray)
+      ? objectOrArray
+      : [objectOrArray];
+    const awaitableTasks: Array<AwaitableTask> = [];
+    for (let i = 0; i < objectArray.length; i += batchSize) {
+      awaitableTasks.push(new AwaitableTask(
+        this.#clientInstance,
+        await this.#clientInstance.raw(
+          `/indexes/${this.uid}/documents${primaryKey ? `?primaryKey=${primaryKey}` : ""
+          }`,
+          "POST",
+          JSON.stringify(objectArray.slice(i, i + batchSize) ?? []),
+        ),
+      ))
+    }
+    return awaitableTasks;
   }
 
   async documentsAddOrUpdate(
@@ -311,13 +337,35 @@ export class IndexResponse {
     return new AwaitableTask(
       this.#clientInstance,
       await this.#clientInstance.raw(
-        `/indexes/${this.uid}/documents${
-          primaryKey ? `?primaryKey=${primaryKey}` : ""
+        `/indexes/${this.uid}/documents${primaryKey ? `?primaryKey=${primaryKey}` : ""
         }`,
         "PUT",
         JSON.stringify(objectArray ?? []),
       ),
     );
+  }
+
+  async documentsAddOrUpdateInBatches(
+    objectOrArray: { [key: string]: unknown } | { [key: string]: unknown }[],
+    batchSize = 1000,
+    primaryKey?: number | string,
+  ): Promise<AwaitableTask[]> {
+    const objectArray = Array.isArray(objectOrArray)
+      ? objectOrArray
+      : [objectOrArray];
+    const awaitableTasks: Array<AwaitableTask> = [];
+    for (let i = 0; i < objectArray.length; i += batchSize) {
+      awaitableTasks.push(new AwaitableTask(
+        this.#clientInstance,
+        await this.#clientInstance.raw(
+          `/indexes/${this.uid}/documents${primaryKey ? `?primaryKey=${primaryKey}` : ""
+          }`,
+          "PUT",
+          JSON.stringify(objectArray.slice(i, i + batchSize) ?? []),
+        ),
+      ))
+    }
+    return awaitableTasks;
   }
 
   async documentsDeleteAll(): Promise<AwaitableTask> {
