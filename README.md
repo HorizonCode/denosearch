@@ -1,14 +1,18 @@
 # denosearch
-denosearch is a wrapper for the MeiliSearch API in Deno. It provides a simple and convenient way to interact with the MeiliSearch API.
 
-> **⚠️ WARNING: This MeiliSearch wrapper is currently under heavy development, and breaking changes may occur frequently. It's currently not recommended to use this in production environments at current state. ⚠️**
+denosearch is a wrapper for the MeiliSearch API in Deno. It provides a simple
+and convenient way to interact with the MeiliSearch API.
+
+> **⚠️ WARNING: This MeiliSearch wrapper is currently under heavy development,
+> and breaking changes may occur frequently. It's currently not recommended to
+> use this in production environments at current state. ⚠️**
 
 ## Usage
 
 ### Add the module
 
 ```typescript
-import { Client } from "https://deno.land/x/denosearch/mod.ts"
+import { Client } from "https://deno.land/x/denosearch/mod.ts";
 ```
 
 ### Create a client
@@ -112,10 +116,10 @@ console.log(response);
 
 ```typescript
 const index = await client.index("movies");
-const options = { 
-  q: "query", 
-  limit: 10, 
-  sort: ["rating:desc", "date:desc"] 
+const options = {
+  q: "query",
+  limit: 10,
+  sort: ["rating:desc", "date:desc"],
 };
 const result = await index.search(options);
 console.log(result);
@@ -154,9 +158,10 @@ console.log(deleteResponse);
 ### Wait for task completion
 
 ```typescript
-const index = await meiliClient.indexCreate('movies', 'id');
+const index = await meiliClient.indexCreate("movies", "id");
 const task = await index.waitUponCompletion();
 console.log(task); //Index was created
 ```
 
-Note: Please replace `"YOUR_API_KEY"` with your actual MeiliSearch API key and `"http://localhost:7700"` with the URL of your MeiliSearch instance.
+Note: Please replace `"YOUR_API_KEY"` with your actual MeiliSearch API key and
+`"http://localhost:7700"` with the URL of your MeiliSearch instance.

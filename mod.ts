@@ -21,13 +21,15 @@ import {
   VersionResponse,
 } from "./types.ts";
 
+const moduleVersion = "0.1.4";
+
 export class Client {
   #isoDateRegex =
     /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2}(?:\.\d*)?)((-(\d{2}):(\d{2})|Z)?)$/gm;
   private options: ClientOptions;
   private headers: Headers = new Headers({
     "Content-Type": "application/json",
-    "User-Agent": "denosearch",
+    "User-Agent": `denosearch v${moduleVersion}`,
   });
 
   constructor(options: ClientOptions) {
@@ -76,11 +78,12 @@ export class Client {
   ): Promise<any> {
     let fetchResult;
     try {
-      const hostUrl = `${this.options.host.startsWith("http://") ||
-        this.options.host.startsWith("https://")
-        ? `${this.options.host}`
-        : `http://${this.options.host}`
-        }`;
+      const hostUrl = `${
+        this.options.host.startsWith("http://") ||
+          this.options.host.startsWith("https://")
+          ? `${this.options.host}`
+          : `http://${this.options.host}`
+      }`;
       fetchResult = await fetch(`${hostUrl}${reqStr}`, {
         headers: this.headers,
         method,
@@ -281,7 +284,8 @@ export class IndexResponse {
     fields?: string[],
   ): Promise<{ [key: string]: unknown }> {
     return await this.#clientInstance.raw(
-      `/indexes/${this.uid}/documents/${documentId}${fields ? `?fields=${fields.join(",")}` : ""
+      `/indexes/${this.uid}/documents/${documentId}${
+        fields ? `?fields=${fields.join(",")}` : ""
       }`,
     );
   }
@@ -296,7 +300,8 @@ export class IndexResponse {
     return new AwaitableTask(
       this.#clientInstance,
       await this.#clientInstance.raw(
-        `/indexes/${this.uid}/documents${primaryKey ? `?primaryKey=${primaryKey}` : ""
+        `/indexes/${this.uid}/documents${
+          primaryKey ? `?primaryKey=${primaryKey}` : ""
         }`,
         "POST",
         JSON.stringify(objectArray ?? []),
@@ -314,15 +319,18 @@ export class IndexResponse {
       : [objectOrArray];
     const awaitableTasks: Array<AwaitableTask> = [];
     for (let i = 0; i < objectArray.length; i += batchSize) {
-      awaitableTasks.push(new AwaitableTask(
-        this.#clientInstance,
-        await this.#clientInstance.raw(
-          `/indexes/${this.uid}/documents${primaryKey ? `?primaryKey=${primaryKey}` : ""
-          }`,
-          "POST",
-          JSON.stringify(objectArray.slice(i, i + batchSize) ?? []),
+      awaitableTasks.push(
+        new AwaitableTask(
+          this.#clientInstance,
+          await this.#clientInstance.raw(
+            `/indexes/${this.uid}/documents${
+              primaryKey ? `?primaryKey=${primaryKey}` : ""
+            }`,
+            "POST",
+            JSON.stringify(objectArray.slice(i, i + batchSize) ?? []),
+          ),
         ),
-      ))
+      );
     }
     return awaitableTasks;
   }
@@ -337,7 +345,8 @@ export class IndexResponse {
     return new AwaitableTask(
       this.#clientInstance,
       await this.#clientInstance.raw(
-        `/indexes/${this.uid}/documents${primaryKey ? `?primaryKey=${primaryKey}` : ""
+        `/indexes/${this.uid}/documents${
+          primaryKey ? `?primaryKey=${primaryKey}` : ""
         }`,
         "PUT",
         JSON.stringify(objectArray ?? []),
@@ -355,15 +364,18 @@ export class IndexResponse {
       : [objectOrArray];
     const awaitableTasks: Array<AwaitableTask> = [];
     for (let i = 0; i < objectArray.length; i += batchSize) {
-      awaitableTasks.push(new AwaitableTask(
-        this.#clientInstance,
-        await this.#clientInstance.raw(
-          `/indexes/${this.uid}/documents${primaryKey ? `?primaryKey=${primaryKey}` : ""
-          }`,
-          "PUT",
-          JSON.stringify(objectArray.slice(i, i + batchSize) ?? []),
+      awaitableTasks.push(
+        new AwaitableTask(
+          this.#clientInstance,
+          await this.#clientInstance.raw(
+            `/indexes/${this.uid}/documents${
+              primaryKey ? `?primaryKey=${primaryKey}` : ""
+            }`,
+            "PUT",
+            JSON.stringify(objectArray.slice(i, i + batchSize) ?? []),
+          ),
         ),
-      ))
+      );
     }
     return awaitableTasks;
   }
@@ -485,7 +497,7 @@ export class AwaitableTask {
             resolve(checkedTask);
           }
         },
-        1000,
+        500,
       );
     });
   }
