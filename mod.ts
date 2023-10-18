@@ -35,8 +35,7 @@ import {
 const moduleVersion = "1.4.1";
 
 export class Client {
-  #isoDateRegex =
-    /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2}(?:\.\d*)?)((-(\d{2}):(\d{2})|Z)?)$/gm;
+  #isoDateRegex = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?Z$/;
   private options: ClientOptions;
   private headers: Headers = new Headers({
     "Content-Type": "application/json",
@@ -50,30 +49,29 @@ export class Client {
     }
   }
 
-  #isValidDate(date: Date) {
-    return date instanceof Date && !isNaN(date.getTime());
-  }
-
   #convertStringToDate(
-    obj: { [key: string]: unknown },
-  ): { [key: string]: unknown } {
-    const entries = Object.entries(obj);
-    for (const [key, value] of entries) {
-      if (typeof value === "string") {
-        const newDate = new Date(value);
-        if (
-          this.#isValidDate(newDate) &&
-          this.#isoDateRegex.test(value)
-        ) {
-          obj[key] = newDate;
-        }
-      } else if (typeof value === "object" && value !== null) {
-        if (Array.isArray(value)) {
-          for (let i = 0; i < value.length; i++) {
-            this.#convertStringToDate(value[i] as { [key: string]: unknown });
+    // deno-lint-ignore no-explicit-any
+    obj: any,
+    // deno-lint-ignore no-explicit-any
+  ): any {
+    if (typeof obj === "object") {
+      if (Array.isArray(obj)) {
+        return obj.map((item) => this.#convertStringToDate(item));
+      } else {
+        // deno-lint-ignore no-explicit-any
+        const newObj: { [key: string]: any } = {};
+        for (const key in obj) {
+          if (key in obj) {
+            newObj[key] = this.#convertStringToDate(obj[key]);
           }
-        } else {
-          this.#convertStringToDate(value as { [key: string]: unknown });
+        }
+        return newObj;
+      }
+    } else if (typeof obj === "string") {
+      if (this.#isoDateRegex.test(obj)) {
+        const date = new Date(obj);
+        if (!isNaN(date.getTime())) {
+          return date;
         }
       }
     }
