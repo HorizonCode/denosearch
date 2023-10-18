@@ -2,15 +2,18 @@ import {
   ClientOptions,
   DocumentsOptions,
   DocumentsResult,
+  FacetSearchOptions,
+  FacetSearchResult,
   HealthResponse,
   Index,
   IndexesOptions,
   IndexesResponse,
   IndexSettings,
+  IndexSettingsResponse,
   IndexStats,
+  MultiSearchResult,
   SearchOptions,
   SearchResult,
-  SettingsResponse,
   StatsResponse,
   Task,
   TaskOptions,
@@ -116,6 +119,16 @@ export class Client {
 
   async version(): Promise<VersionResponse> {
     return await this.raw(`/version`);
+  }
+
+  async dumpCreate(): Promise<AwaitableTask> {
+    return new AwaitableTask(
+      this,
+      await this.raw(
+        `/dumps`,
+        "POST",
+      ),
+    );
   }
 
   async indexList(options?: IndexesOptions): Promise<IndexesResponse> {
@@ -228,7 +241,7 @@ export class IndexResponse {
     );
   }
 
-  async settingsGet(): Promise<SettingsResponse> {
+  async settingsGet(): Promise<IndexSettingsResponse> {
     return await this.#clientInstance.raw(
       `/indexes/${this.uid}/settings`,
     );
@@ -416,6 +429,22 @@ export class IndexResponse {
   async search(options?: SearchOptions): Promise<SearchResult> {
     return await this.#clientInstance.raw(
       `/indexes/${this.uid}/search`,
+      "POST",
+      JSON.stringify(options ?? {}),
+    );
+  }
+
+  async searchMulti(options: SearchOptions[]): Promise<MultiSearchResult> {
+    return await this.#clientInstance.raw(
+      `/indexes/${this.uid}/multi-search`,
+      "POST",
+      JSON.stringify({ queries: options } ?? {}),
+    );
+  }
+
+  async searchFacet(options: FacetSearchOptions): Promise<FacetSearchResult> {
+    return await this.#clientInstance.raw(
+      `/indexes/${this.uid}/facet-search`,
       "POST",
       JSON.stringify(options ?? {}),
     );
