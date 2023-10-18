@@ -81,6 +81,17 @@ export type SearchOptions = {
   highlightPostTag?: string;
   sort?: string[];
   matchingStrategy?: string;
+  showRankingScore?: boolean;
+  attributesToSearchOn?: string[];
+};
+
+export type FacetSearchOptions = {
+  facetName?: string;
+  facetQuery?: string;
+  q?: string;
+  filter?: string[];
+  matchingStrategy?: "last" | "all";
+  attributesToSearchOn?: string[];
 };
 
 export type SearchResult = {
@@ -90,6 +101,19 @@ export type SearchResult = {
   limit: number;
   offset: number;
   estimatedTotalHits: number;
+};
+
+export type MultiSearchResult = {
+  results: SearchResult[];
+};
+
+export type FacetSearchResult = {
+  facetHits: {
+    value: string;
+    count: number;
+  };
+  facetQuery: string;
+  processingTimeMs: number;
 };
 
 export type DocumentsOptions = {
@@ -162,20 +186,6 @@ export type TypoToleranceSettings = {
   disableOnAttributes: string[];
 };
 
-export type SettingsResponse = {
-  displayedAttributes: string[];
-  searchableAttributes: string[];
-  filterableAttributes: string[];
-  sortableAttributes: string[];
-  rankingRules: string[];
-  stopWords: string[];
-  synonyms: { [key: string]: unknown };
-  distinctAttribute: string;
-  typoTolerance: TypoToleranceSettings;
-  faceting: { maxValuesPerFacet: number };
-  pagination: { maxTotalHits: number };
-};
-
 export type IndexFacetingSettings = {
   maxValuesPerFacet: number;
 };
@@ -184,7 +194,25 @@ export type IndexPaginationSettings = {
   maxTotalHits: number;
 };
 
+export type IndexSettingsResponse = {
+  displayedAttributes: string[];
+  searchableAttributes: string[];
+  filterableAttributes: string[];
+  sortableAttributes: string[];
+  rankingRules: string[];
+  stopWords: string[];
+  nonSeparatorTokens: string[];
+  separatorTokens: string[];
+  dictionary: string[];
+  synonyms: { [key: string]: unknown };
+  distinctAttribute: string;
+  typoTolerance: TypoToleranceSettings;
+  faceting: { maxValuesPerFacet: number };
+  pagination: { maxTotalHits: number };
+};
+
 export type IndexSettings = {
+  dictionary: string[];
   displayedAttributes?: string[];
   distinctAttribute?: string | null;
   faceting?: IndexFacetingSettings;
@@ -192,6 +220,8 @@ export type IndexSettings = {
   pagination?: IndexPaginationSettings;
   rankingRules?: string[];
   searchableAttributes?: string[];
+  separatorTokens: string[];
+  noSeparatorTokens: string[];
   sortableAttributes?: string[];
   stopWords?: string[];
   synonyms?: { [key: string]: string };
