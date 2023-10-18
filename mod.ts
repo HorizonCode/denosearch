@@ -8,9 +8,17 @@ import {
   Index,
   IndexesOptions,
   IndexesResponse,
+  IndexFacetingSettings,
+  IndexPaginationSettings,
   IndexSettings,
   IndexSettingsResponse,
   IndexStats,
+  IndexTypoToleranceSettings,
+  Key,
+  KeyCreationOptions,
+  KeyOptions,
+  KeyResult,
+  KeyUpdateOptions,
   MultiSearchResult,
   SearchOptions,
   SearchResult,
@@ -109,18 +117,6 @@ export class Client {
     return this.#convertStringToDate(await fetchResult.json());
   }
 
-  async health(): Promise<HealthResponse> {
-    return await this.raw(`/health`);
-  }
-
-  async stats(): Promise<StatsResponse> {
-    return await this.raw(`/stats`);
-  }
-
-  async version(): Promise<VersionResponse> {
-    return await this.raw(`/version`);
-  }
-
   async dumpCreate(): Promise<AwaitableTask> {
     return new AwaitableTask(
       this,
@@ -129,6 +125,10 @@ export class Client {
         "POST",
       ),
     );
+  }
+
+  async health(): Promise<HealthResponse> {
+    return await this.raw(`/health`);
   }
 
   async indexList(options?: IndexesOptions): Promise<IndexesResponse> {
@@ -189,6 +189,41 @@ export class Client {
     );
   }
 
+  async key(keyOrUid: string): Promise<Key> {
+    return await this.raw(`/keys/${keyOrUid}`);
+  }
+
+  async keys(options?: KeyOptions): Promise<KeyResult> {
+    return await this.raw(`/keys`, "GET", JSON.stringify(options ?? {}));
+  }
+
+  async keyCreate(keyCreationOptions: KeyCreationOptions): Promise<Key> {
+    if (keyCreationOptions.expiresAt instanceof Date) {
+      keyCreationOptions.expiresAt = keyCreationOptions.expiresAt.toISOString();
+    }
+
+    return await this.raw(`/keys`, "POST", JSON.stringify(keyCreationOptions));
+  }
+
+  async keyUpdate(
+    keyOrUid: string,
+    keyUpdateOptions: KeyUpdateOptions,
+  ): Promise<Key> {
+    return await this.raw(
+      `/keys/${keyOrUid}`,
+      "PATCH",
+      JSON.stringify(keyUpdateOptions),
+    );
+  }
+
+  async keyDelete(keyOrUid: string): Promise<void> {
+    return await this.raw(`/keys/${keyOrUid}`, "DELETE");
+  }
+
+  async stats(): Promise<StatsResponse> {
+    return await this.raw(`/stats`);
+  }
+
   async taskList(options?: TaskOptions): Promise<Tasks> {
     let queryParams;
     if (options) {
@@ -219,6 +254,10 @@ export class Client {
       `/tasks/${taskId}`,
     );
   }
+
+  async version(): Promise<VersionResponse> {
+    return await this.raw(`/version`);
+  }
 }
 
 export class IndexResponse {
@@ -241,13 +280,97 @@ export class IndexResponse {
     );
   }
 
-  async settingsGet(): Promise<IndexSettingsResponse> {
+  async settingsGetAll(): Promise<IndexSettingsResponse> {
     return await this.#clientInstance.raw(
       `/indexes/${this.uid}/settings`,
     );
   }
 
-  async settingsUpdate(settings: IndexSettings): Promise<AwaitableTask> {
+  async settingsGetDictionary(): Promise<string[]> {
+    return await this.#clientInstance.raw(
+      `/indexes/${this.uid}/settings/dictionary`,
+    );
+  }
+
+  async settingsGetDisplayedAttributes(): Promise<string[]> {
+    return await this.#clientInstance.raw(
+      `/indexes/${this.uid}/settings/displayed-attributes`,
+    );
+  }
+
+  async settingsGetDistinctAttribute(): Promise<string> {
+    return await this.#clientInstance.raw(
+      `/indexes/${this.uid}/settings/distinct-attribute`,
+    );
+  }
+
+  async settingsGetFaceting(): Promise<IndexFacetingSettings> {
+    return await this.#clientInstance.raw(
+      `/indexes/${this.uid}/settings/faceting`,
+    );
+  }
+
+  async settingsGetFilterableAttributes(): Promise<string[]> {
+    return await this.#clientInstance.raw(
+      `/indexes/${this.uid}/settings/filterable-attributes`,
+    );
+  }
+
+  async settingsGetPagination(): Promise<IndexPaginationSettings> {
+    return await this.#clientInstance.raw(
+      `/indexes/${this.uid}/settings/pagination`,
+    );
+  }
+
+  async settingsGetRankingRules(): Promise<string[]> {
+    return await this.#clientInstance.raw(
+      `/indexes/${this.uid}/settings/ranking-rules`,
+    );
+  }
+
+  async settingsGetSearchableAttributes(): Promise<string[]> {
+    return await this.#clientInstance.raw(
+      `/indexes/${this.uid}/settings/searchable-attributes`,
+    );
+  }
+
+  async settingsGetSeparatorTokens(): Promise<string[]> {
+    return await this.#clientInstance.raw(
+      `/indexes/${this.uid}/settings/separator-tokens`,
+    );
+  }
+
+  async settingsGetNonSeparatorTokens(): Promise<string[]> {
+    return await this.#clientInstance.raw(
+      `/indexes/${this.uid}/settings/non-separator-tokens`,
+    );
+  }
+
+  async settingsGetSortableAttributes(): Promise<string[]> {
+    return await this.#clientInstance.raw(
+      `/indexes/${this.uid}/settings/sortable-attributes`,
+    );
+  }
+
+  async settingsGetStopWords(): Promise<string[]> {
+    return await this.#clientInstance.raw(
+      `/indexes/${this.uid}/settings/stop-words`,
+    );
+  }
+
+  async settingsGetSynonyms(): Promise<{ [key: string]: string[] }> {
+    return await this.#clientInstance.raw(
+      `/indexes/${this.uid}/settings/synonyms`,
+    );
+  }
+
+  async settingsGetTypoTolerance(): Promise<IndexTypoToleranceSettings> {
+    return await this.#clientInstance.raw(
+      `/indexes/${this.uid}/settings/typo-tolerance`,
+    );
+  }
+
+  async settingsUpdateAll(settings: IndexSettings): Promise<AwaitableTask> {
     return new AwaitableTask(
       this.#clientInstance,
       await this.#clientInstance.raw(
@@ -258,11 +381,331 @@ export class IndexResponse {
     );
   }
 
-  async settingsReset(): Promise<AwaitableTask> {
+  async settingsUpdateDictionary(dictionary: string[]): Promise<AwaitableTask> {
+    return new AwaitableTask(
+      this.#clientInstance,
+      await this.#clientInstance.raw(
+        `/indexes/${this.uid}/settings/dictionary`,
+        "PUT",
+        JSON.stringify(dictionary),
+      ),
+    );
+  }
+
+  async settingsUpdateDisplayedAttributes(
+    displayedAttributes: string[],
+  ): Promise<AwaitableTask> {
+    return new AwaitableTask(
+      this.#clientInstance,
+      await this.#clientInstance.raw(
+        `/indexes/${this.uid}/settings/displayed-attributes`,
+        "PUT",
+        JSON.stringify(displayedAttributes),
+      ),
+    );
+  }
+
+  async settingsUpdateDistinctAttribute(
+    distinctAttribute: string,
+  ): Promise<AwaitableTask> {
+    return new AwaitableTask(
+      this.#clientInstance,
+      await this.#clientInstance.raw(
+        `/indexes/${this.uid}/settings/distinct-attribute`,
+        "PUT",
+        JSON.stringify(distinctAttribute),
+      ),
+    );
+  }
+
+  async settingsUpdateFaceting(
+    facetingSettings: IndexFacetingSettings,
+  ): Promise<AwaitableTask> {
+    return new AwaitableTask(
+      this.#clientInstance,
+      await this.#clientInstance.raw(
+        `/indexes/${this.uid}/settings/faceting`,
+        "PATCH",
+        JSON.stringify(facetingSettings),
+      ),
+    );
+  }
+
+  async settingsUpdateFilterableAttributes(
+    filterableAttributes: string[],
+  ): Promise<AwaitableTask> {
+    return new AwaitableTask(
+      this.#clientInstance,
+      await this.#clientInstance.raw(
+        `/indexes/${this.uid}/settings/filterable-attributes`,
+        "PUT",
+        JSON.stringify(filterableAttributes),
+      ),
+    );
+  }
+
+  async settingsUpdatePagination(
+    indexSettings: IndexPaginationSettings,
+  ): Promise<AwaitableTask> {
+    return new AwaitableTask(
+      this.#clientInstance,
+      await this.#clientInstance.raw(
+        `/indexes/${this.uid}/settings/pagination`,
+        "PATCH",
+        JSON.stringify(indexSettings),
+      ),
+    );
+  }
+
+  async settingsUpdateRankingRules(
+    rankingRules: string[],
+  ): Promise<AwaitableTask> {
+    return new AwaitableTask(
+      this.#clientInstance,
+      await this.#clientInstance.raw(
+        `/indexes/${this.uid}/settings/ranking-rules`,
+        "PUT",
+        JSON.stringify(rankingRules),
+      ),
+    );
+  }
+
+  async settingsUpdateSearchableAttributes(
+    searchableAttributes: string[],
+  ): Promise<AwaitableTask> {
+    return new AwaitableTask(
+      this.#clientInstance,
+      await this.#clientInstance.raw(
+        `/indexes/${this.uid}/settings/searchable-attributes`,
+        "PUT",
+        JSON.stringify(searchableAttributes),
+      ),
+    );
+  }
+
+  async settingsUpdateSeparatorTokens(
+    separatorTokens: string[],
+  ): Promise<AwaitableTask> {
+    return new AwaitableTask(
+      this.#clientInstance,
+      await this.#clientInstance.raw(
+        `/indexes/${this.uid}/settings/separator-tokens`,
+        "PUT",
+        JSON.stringify(separatorTokens),
+      ),
+    );
+  }
+
+  async settingsUpdateNonSeparatorTokens(
+    nonSeparatorTokens: string[],
+  ): Promise<AwaitableTask> {
+    return new AwaitableTask(
+      this.#clientInstance,
+      await this.#clientInstance.raw(
+        `/indexes/${this.uid}/settings/non-separator-tokens`,
+        "PUT",
+        JSON.stringify(nonSeparatorTokens),
+      ),
+    );
+  }
+
+  async settingsUpdateSortableAttributes(
+    sortableAttributes: string[],
+  ): Promise<AwaitableTask> {
+    return new AwaitableTask(
+      this.#clientInstance,
+      await this.#clientInstance.raw(
+        `/indexes/${this.uid}/settings/sortable-attributes`,
+        "PUT",
+        JSON.stringify(sortableAttributes),
+      ),
+    );
+  }
+
+  async settingsUpdateStopWords(
+    stopWords: string[],
+  ): Promise<AwaitableTask> {
+    return new AwaitableTask(
+      this.#clientInstance,
+      await this.#clientInstance.raw(
+        `/indexes/${this.uid}/settings/stop-words`,
+        "PUT",
+        JSON.stringify(stopWords),
+      ),
+    );
+  }
+
+  async settingsUpdateSynonyms(
+    synonyms: { [key: string]: string[] },
+  ): Promise<AwaitableTask> {
+    return new AwaitableTask(
+      this.#clientInstance,
+      await this.#clientInstance.raw(
+        `/indexes/${this.uid}/settings/synonyms`,
+        "PUT",
+        JSON.stringify(synonyms),
+      ),
+    );
+  }
+
+  async settingsUpdateTypoTolerance(
+    typoToleranceSettings: IndexTypoToleranceSettings,
+  ): Promise<AwaitableTask> {
+    return new AwaitableTask(
+      this.#clientInstance,
+      await this.#clientInstance.raw(
+        `/indexes/${this.uid}/settings/typo-tolerance`,
+        "PUT",
+        JSON.stringify(typoToleranceSettings),
+      ),
+    );
+  }
+
+  async settingsResetAll(): Promise<AwaitableTask> {
     return new AwaitableTask(
       this.#clientInstance,
       await this.#clientInstance.raw(
         `/indexes/${this.uid}/settings`,
+        "DELETE",
+      ),
+    );
+  }
+
+  async settingsResetDictionary(): Promise<AwaitableTask> {
+    return new AwaitableTask(
+      this.#clientInstance,
+      await this.#clientInstance.raw(
+        `/indexes/${this.uid}/settings/dictionary`,
+        "DELETE",
+      ),
+    );
+  }
+
+  async settingsResetDisplayedAttributes(): Promise<AwaitableTask> {
+    return new AwaitableTask(
+      this.#clientInstance,
+      await this.#clientInstance.raw(
+        `/indexes/${this.uid}/settings/displayed-attributes`,
+        "DELETE",
+      ),
+    );
+  }
+
+  async settingsResetDistinctAttribute(): Promise<AwaitableTask> {
+    return new AwaitableTask(
+      this.#clientInstance,
+      await this.#clientInstance.raw(
+        `/indexes/${this.uid}/settings/distinct-attribute`,
+        "DELETE",
+      ),
+    );
+  }
+
+  async settingsResetFaceting(): Promise<AwaitableTask> {
+    return new AwaitableTask(
+      this.#clientInstance,
+      await this.#clientInstance.raw(
+        `/indexes/${this.uid}/settings/faceting`,
+        "DELETE",
+      ),
+    );
+  }
+
+  async settingsResetFilterableAttributes(): Promise<AwaitableTask> {
+    return new AwaitableTask(
+      this.#clientInstance,
+      await this.#clientInstance.raw(
+        `/indexes/${this.uid}/settings/filterable-attributes`,
+        "DELETE",
+      ),
+    );
+  }
+
+  async settingsResetPagination(): Promise<AwaitableTask> {
+    return new AwaitableTask(
+      this.#clientInstance,
+      await this.#clientInstance.raw(
+        `/indexes/${this.uid}/settings/pagination`,
+        "DELETE",
+      ),
+    );
+  }
+
+  async settingsResetRankingRules(): Promise<AwaitableTask> {
+    return new AwaitableTask(
+      this.#clientInstance,
+      await this.#clientInstance.raw(
+        `/indexes/${this.uid}/settings/ranking-rules`,
+        "DELETE",
+      ),
+    );
+  }
+
+  async settingsResetSearchableAttributes(): Promise<AwaitableTask> {
+    return new AwaitableTask(
+      this.#clientInstance,
+      await this.#clientInstance.raw(
+        `/indexes/${this.uid}/settings/searchable-attributes`,
+        "DELETE",
+      ),
+    );
+  }
+
+  async settingsResetSeparatorTokens(): Promise<AwaitableTask> {
+    return new AwaitableTask(
+      this.#clientInstance,
+      await this.#clientInstance.raw(
+        `/indexes/${this.uid}/settings/separator-tokens`,
+        "DELETE",
+      ),
+    );
+  }
+
+  async settingsResetNonSeparatorTokens(): Promise<AwaitableTask> {
+    return new AwaitableTask(
+      this.#clientInstance,
+      await this.#clientInstance.raw(
+        `/indexes/${this.uid}/settings/non-separator-tokens`,
+        "DELETE",
+      ),
+    );
+  }
+
+  async settingsResetSortableAttributes(): Promise<AwaitableTask> {
+    return new AwaitableTask(
+      this.#clientInstance,
+      await this.#clientInstance.raw(
+        `/indexes/${this.uid}/settings/sortable-attributes`,
+        "DELETE",
+      ),
+    );
+  }
+
+  async settingsResetStopWords(): Promise<AwaitableTask> {
+    return new AwaitableTask(
+      this.#clientInstance,
+      await this.#clientInstance.raw(
+        `/indexes/${this.uid}/settings/stop-words`,
+        "DELETE",
+      ),
+    );
+  }
+
+  async settingsResetSynonyms(): Promise<AwaitableTask> {
+    return new AwaitableTask(
+      this.#clientInstance,
+      await this.#clientInstance.raw(
+        `/indexes/${this.uid}/settings/synonyms`,
+        "DELETE",
+      ),
+    );
+  }
+
+  async settingsResetTypoTolerance(): Promise<AwaitableTask> {
+    return new AwaitableTask(
+      this.#clientInstance,
+      await this.#clientInstance.raw(
+        `/indexes/${this.uid}/settings/typo-tolerance`,
         "DELETE",
       ),
     );

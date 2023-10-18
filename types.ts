@@ -179,7 +179,7 @@ export type TasksResult = {
   next: number | null;
 };
 
-export type TypoToleranceSettings = {
+export type IndexTypoToleranceSettings = {
   enabled: boolean;
   minWordSizeForTypos: { oneTypo: number; twoTypos: number };
   disableOnWords: string[];
@@ -188,6 +188,7 @@ export type TypoToleranceSettings = {
 
 export type IndexFacetingSettings = {
   maxValuesPerFacet: number;
+  sortFacetValuesBy: Record<string, string>;
 };
 
 export type IndexPaginationSettings = {
@@ -204,11 +205,11 @@ export type IndexSettingsResponse = {
   nonSeparatorTokens: string[];
   separatorTokens: string[];
   dictionary: string[];
-  synonyms: { [key: string]: unknown };
+  synonyms: { [key: string]: string[] };
   distinctAttribute: string;
-  typoTolerance: TypoToleranceSettings;
-  faceting: { maxValuesPerFacet: number };
-  pagination: { maxTotalHits: number };
+  typoTolerance: IndexTypoToleranceSettings;
+  faceting: IndexFacetingSettings;
+  pagination: IndexPaginationSettings;
 };
 
 export type IndexSettings = {
@@ -224,6 +225,44 @@ export type IndexSettings = {
   noSeparatorTokens: string[];
   sortableAttributes?: string[];
   stopWords?: string[];
-  synonyms?: { [key: string]: string };
-  typoTolerance?: TypoToleranceSettings;
+  synonyms?: { [key: string]: string[] };
+  typoTolerance?: IndexTypoToleranceSettings;
+};
+
+export type Key = {
+  name: string;
+  description: string;
+  key: string;
+  uid: string;
+  actions: string[];
+  indexes: string[];
+  expiresAt: Date | null;
+  createdAt: Date;
+  updatedAt: Date;
+};
+
+export type KeyOptions = {
+  offset?: number;
+  limit?: number;
+};
+
+export type KeyResult = {
+  results: Key[];
+  offset: number;
+  limit: number;
+  total: number;
+};
+
+export type KeyCreationOptions = {
+  actions: string[];
+  indexes: string[];
+  expiresAt: Date | string | null;
+  name?: string;
+  uid: string;
+  description?: string;
+};
+
+export type KeyUpdateOptions = {
+  name?: string;
+  description?: string;
 };
