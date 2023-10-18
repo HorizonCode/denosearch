@@ -32,7 +32,7 @@ import {
   VersionResponse,
 } from "./types.ts";
 
-const moduleVersion = "0.2.0";
+const moduleVersion = "1.4.1";
 
 export class Client {
   #isoDateRegex =
