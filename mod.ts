@@ -400,7 +400,7 @@ export class IndexResponse {
     );
   }
 
-  async documentDeleteByBatch(
+  async documentsDelete(
     documentIds: (string | number)[],
   ): Promise<AwaitableTask> {
     return new AwaitableTask(
